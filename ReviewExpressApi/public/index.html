@@ -48,14 +48,21 @@
     </div>
 
     <script>
+        // .NET API URL
+        const API_URL = 'https://app-review-yusuf-exeebbffbsavf5dz.swedencentral-01.azurewebsites.net';
+
         // Hämta alla recensioner
         async function fetchReviews() {
             try {
-                const response = await fetch('/api/recensioner');
+                const response = await fetch(`${API_URL}/recensioner`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const reviews = await response.json();
                 displayReviews(reviews);
             } catch (error) {
                 console.error('Fel vid hämtning av recensioner:', error);
+                document.getElementById('reviewsList').innerHTML = '<p class="text-red-500">Kunde inte hämta recensioner. Försök igen senare.</p>';
             }
         }
 
@@ -63,6 +70,11 @@
         function displayReviews(reviews) {
             const reviewsList = document.getElementById('reviewsList');
             reviewsList.innerHTML = '';
+
+            if (!reviews || reviews.length === 0) {
+                reviewsList.innerHTML = '<p>Inga recensioner att visa.</p>';
+                return;
+            }
 
             reviews.forEach(review => {
                 const reviewElement = document.createElement('div');
@@ -99,19 +111,27 @@
             };
 
             try {
-                await fetch('/api/recensioner', {
+                console.log('Skickar recension:', review);
+                const response = await fetch(`${API_URL}/recensioner`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(review)
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
+                }
 
                 // Rensa formulär och uppdatera recensionslistan
                 e.target.reset();
                 fetchReviews();
             } catch (error) {
                 console.error('Fel vid skapande av recension:', error);
+                alert('Kunde inte skapa recensionen: ' + error.message);
             }
         });
 
@@ -119,12 +139,18 @@
         async function deleteReview(id) {
             if (confirm('Är du säker på att du vill ta bort denna recension?')) {
                 try {
-                    await fetch(`/api/recensioner/${id}`, {
+                    const response = await fetch(`${API_URL}/recensioner/${id}`, {
                         method: 'DELETE'
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
                     fetchReviews();
                 } catch (error) {
                     console.error('Fel vid borttagning av recension:', error);
+                    alert('Kunde inte ta bort recensionen: ' + error.message);
                 }
             }
         }

@@ -17,18 +17,16 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Konfigurera CORS för att tillåta anrop från frontend
+var corsPolicy = "AllowAll";
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
-    {
-        // I produktion tillåter vi anrop från både localhost och Azure-domänen
-        builder.WithOrigins(
-                "http://localhost:3000",
-                "https://app-review-yusuf-exeebbffbsavf5dz.swedencentral-01.azurewebsites.net"
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
+    options.AddPolicy(name: corsPolicy,
+        policy =>
+        {
+            policy.WithOrigins("https://review-express-frontend-yusuf-aef7epgbbjheh8g0.swedencentral-01.azurewebsites.net")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
 });
 
 // Lägg till databaskontexten
@@ -50,7 +48,7 @@ app.UseSwaggerUI(c =>
 
 // Använd HTTPS-omdirigering och CORS
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors(corsPolicy);
 
 // CRUD Endpoints för recensioner
 // GET: Hämta alla recensioner

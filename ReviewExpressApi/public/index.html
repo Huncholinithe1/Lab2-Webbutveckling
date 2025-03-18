@@ -54,15 +54,25 @@
         // Hämta alla recensioner
         async function fetchReviews() {
             try {
-                const response = await fetch(`${API_URL}/recensioner`);
+                const response = await fetch(`${API_URL}/recensioner`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
                 const reviews = await response.json();
                 displayReviews(reviews);
             } catch (error) {
                 console.error('Fel vid hämtning av recensioner:', error);
-                document.getElementById('reviewsList').innerHTML = '<p class="text-red-500">Kunde inte hämta recensioner. Försök igen senare.</p>';
+                document.getElementById('reviewsList').innerHTML = 
+                    '<p class="text-red-500">Kunde inte hämta recensioner. Kontrollera utvecklarverktygen (F12) för mer information.</p>';
             }
         }
 
@@ -118,20 +128,24 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
+                    mode: 'cors',
+                    credentials: 'omit',
                     body: JSON.stringify(review)
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 // Rensa formulär och uppdatera recensionslistan
                 e.target.reset();
                 fetchReviews();
+                alert('Recension skapad!');
             } catch (error) {
                 console.error('Fel vid skapande av recension:', error);
-                alert('Kunde inte skapa recensionen: ' + error.message);
+                alert('Kunde inte skapa recensionen. Kontrollera utvecklarverktygen (F12) för mer information.');
             }
         });
 

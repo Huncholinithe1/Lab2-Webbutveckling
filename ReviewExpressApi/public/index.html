@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recensionshantering</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">Recensionshantering</h1>
+        
+        <!-- Formulär för att lägga till recension -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Lägg till ny recension</h2>
+            <form id="reviewForm" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700">Titel</label>
+                    <input type="text" id="title" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Produktnamn</label>
+                    <input type="text" id="productName" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Författare</label>
+                    <input type="text" id="author" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Betyg (1-5)</label>
+                    <input type="number" id="rating" min="1" max="5" class="w-full p-2 border rounded" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700">Innehåll</label>
+                    <textarea id="content" class="w-full p-2 border rounded" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Skicka recension
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista med recensioner -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-4">Recensioner</h2>
+            <div id="reviewsList" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // Hämta alla recensioner
+        async function fetchReviews() {
+            try {
+                const response = await fetch('/api/recensioner');
+                const reviews = await response.json();
+                displayReviews(reviews);
+            } catch (error) {
+                console.error('Fel vid hämtning av recensioner:', error);
+            }
+        }
+
+        // Visa recensioner
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '';
+
+            reviews.forEach(review => {
+                const reviewElement = document.createElement('div');
+                reviewElement.className = 'border p-4 rounded';
+                reviewElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-xl font-semibold">${review.titel}</h3>
+                            <p class="text-gray-600">Produkt: ${review.produktNamn}</p>
+                            <p class="text-gray-600">Av ${review.forfattare}</p>
+                            <p class="text-gray-600">Betyg: ${'⭐'.repeat(review.betyg)}</p>
+                            <p class="mt-2">${review.innehall}</p>
+                            <p class="text-sm text-gray-500">Skapad: ${new Date(review.skapadDatum).toLocaleString('sv-SE')}</p>
+                        </div>
+                        <button onclick="deleteReview(${review.id})" class="text-red-500 hover:text-red-700">
+                            Ta bort
+                        </button>
+                    </div>
+                `;
+                reviewsList.appendChild(reviewElement);
+            });
+        }
+
+        // Hantera formulärinlämning
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const review = {
+                titel: document.getElementById('title').value,
+                produktNamn: document.getElementById('productName').value,
+                forfattare: document.getElementById('author').value,
+                betyg: parseInt(document.getElementById('rating').value),
+                innehall: document.getElementById('content').value
+            };
+
+            try {
+                await fetch('/api/recensioner', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(review)
+                });
+
+                // Rensa formulär och uppdatera recensionslistan
+                e.target.reset();
+                fetchReviews();
+            } catch (error) {
+                console.error('Fel vid skapande av recension:', error);
+            }
+        });
+
+        // Ta bort recension
+        async function deleteReview(id) {
+            if (confirm('Är du säker på att du vill ta bort denna recension?')) {
+                try {
+                    await fetch(`/api/recensioner/${id}`, {
+                        method: 'DELETE'
+                    });
+                    fetchReviews();
+                } catch (error) {
+                    console.error('Fel vid borttagning av recension:', error);
+                }
+            }
+        }
+
+        // Initial laddning
+        fetchReviews();
+    </script>
+</body>
+</html> 

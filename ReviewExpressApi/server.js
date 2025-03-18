@@ -6,10 +6,8 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// URL till .NET API:et - använder Azure URL i produktion
-const DOTNET_API_URL = process.env.NODE_ENV === 'production'
-    ? 'https://app-review-yusuf-exeebbffbsavf5dz.swedencentral-01.azurewebsites.net'
-    : 'http://localhost:5012';
+// URL till .NET API:et på Azure
+const DOTNET_API_URL = 'https://app-review-yusuf-exeebbffbsavf5dz.swedencentral-01.azurewebsites.net';
 
 // Middleware-konfiguration
 app.use(cors());
